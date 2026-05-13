@@ -1,0 +1,48 @@
+# GitHub Actions Deprecation Preflight
+
+Local read-only prototype that scans GitHub Actions workflow files, local JavaScript action metadata, and Markdown snippets for known deprecation/runtime migration risks.
+
+## Current v1 scope
+
+- `actions/upload-artifact@v3` and `actions/download-artifact@v3`
+- `actions/cache@v3`, `actions/checkout@v3`, `actions/setup-node@v3` review signals
+- local `action.yml` / `action.yaml` `runs.using: node16` runtime risk
+- optional low-severity review signal for `runs.using: node20`
+
+No GitHub API, tokens, accounts, or network calls are used.
+
+## Try locally
+
+```bash
+python3 scanner.py examples
+python3 scanner.py examples --format json
+```
+
+Example output:
+
+```text
+# GitHub Actions Deprecation Preflight
+
+Scanned files: 3
+Findings: 6
+```
+
+## Intended workflow
+
+1. Run the scanner at a repository root.
+2. Review high-severity findings first, especially retired artifact actions and old local JavaScript runtimes.
+3. Upgrade action majors on a branch.
+4. Verify workflow behavior before merging.
+
+## Safety notes
+
+- The scanner is read-only.
+- It does not upload workflow contents.
+- It does not need a GitHub token.
+- It does not make automatic migrations.
+
+## Roadmap
+
+- Expand the rule inventory as GitHub Actions deprecations change.
+- Add more fixtures for common workflow patterns.
+- Keep the default mode deterministic, local, and read-only.

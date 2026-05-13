@@ -1,0 +1,16 @@
+name: ci
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: report
+          path: report/
+      - uses: ./github/actions/local-action

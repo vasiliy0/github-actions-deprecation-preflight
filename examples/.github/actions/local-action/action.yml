@@ -1,0 +1,4 @@
+name: local action
+runs:
+  using: node16
+  main: index.js

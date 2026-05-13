@@ -1,6 +1,8 @@
 from pathlib import Path
 import importlib.util
+import json
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +26,19 @@ class TestScanner(unittest.TestCase):
         text = scanner.render_markdown(scanner.scan(ROOT / "examples"))
         self.assertIn("GitHub Actions Deprecation Preflight", text)
         self.assertIn("Read-only local scan", text)
+        self.assertIn("Summary by severity", text)
+
+    def test_output_json_and_fail_on_severity(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "report.json"
+            exit_code = scanner.main([str(ROOT / "examples"), "--format", "json", "--output", str(output), "--fail-on-severity", "high"])
+            self.assertEqual(exit_code, 1)
+            report = json.loads(output.read_text())
+            self.assertEqual(report["summary_by_severity"]["high"], 3)
+
+    def test_fail_on_severity_stays_zero_above_findings(self):
+        exit_code = scanner.main([str(ROOT / "examples"), "--fail-on-severity", "high"])
+        self.assertEqual(exit_code, 1)
 
 if __name__ == "__main__":
     unittest.main()

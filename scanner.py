@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Iterable
 
 DEFAULT_RULES = Path(__file__).with_name("rules.json")
+SEVERITY_ORDER = {"low": 1, "medium": 2, "high": 3}
 
 @dataclass(frozen=True)
 class Rule:
@@ -64,14 +65,26 @@ def scan(root: Path, rules_path: Path = DEFAULT_RULES) -> dict:
         "scanned_files": len(files),
         "finding_count": len(findings),
         "findings": [asdict(f) for f in findings],
+        "summary_by_severity": severity_summary(findings),
         "notes": [
             "Read-only local scan; no GitHub API calls or uploads.",
             "Prototype rules are conservative and should be reviewed against official action changelogs before automated migrations.",
         ],
     }
 
+def severity_summary(findings: list[Finding]) -> dict[str, int]:
+    summary: dict[str, int] = {}
+    for finding in findings:
+        summary[finding.severity] = summary.get(finding.severity, 0) + 1
+    return summary
+
 def render_markdown(report: dict) -> str:
     lines = ["# GitHub Actions Deprecation Preflight", "", f"Scanned files: {report['scanned_files']}", f"Findings: {report['finding_count']}", ""]
+    if report.get("summary_by_severity"):
+        lines.append("## Summary by severity")
+        for severity, count in report["summary_by_severity"].items():
+            lines.append(f"- **{severity}**: {count}")
+        lines.append("")
     if report["findings"]:
         lines.append("## Findings")
         for item in report["findings"]:
@@ -90,11 +103,23 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Scan GitHub Actions files for deprecation risks.")
     parser.add_argument("path", nargs="?", default=".", help="Repository root to scan")
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    parser.add_argument("--output", "-o", help="Write report to a file instead of stdout")
+    parser.add_argument("--fail-on-severity", choices=["low", "medium", "high"], help="Exit 1 when findings at or above this severity are detected")
     parser.add_argument("--rules", type=Path, default=DEFAULT_RULES)
     args = parser.parse_args(argv)
     report = scan(Path(args.path).resolve(), args.rules)
-    print(json.dumps(report, indent=2) if args.format == "json" else render_markdown(report), end="" if args.format == "markdown" else "\n")
+    output = json.dumps(report, indent=2) if args.format == "json" else render_markdown(report)
+    if args.output:
+        Path(args.output).write_text(output + ("" if output.endswith("\n") else "\n"), encoding="utf-8")
+    else:
+        print(output, end="" if args.format == "markdown" else "\n")
+    if args.fail_on_severity and should_fail(report, args.fail_on_severity):
+        return 1
     return 0
+
+def should_fail(report: dict, threshold: str) -> bool:
+    minimum = SEVERITY_ORDER[threshold]
+    return any(SEVERITY_ORDER.get(item["severity"], 0) >= minimum for item in report["findings"])
 
 if __name__ == "__main__":
     raise SystemExit(main())

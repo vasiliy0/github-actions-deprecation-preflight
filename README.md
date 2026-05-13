@@ -16,6 +16,8 @@ No GitHub API, tokens, accounts, or network calls are used.
 ```bash
 python3 scanner.py examples
 python3 scanner.py examples --format json
+python3 scanner.py examples --output report.md
+python3 scanner.py examples --fail-on-severity high
 ```
 
 Example output:
@@ -40,6 +42,7 @@ Findings: 6
 - It does not upload workflow contents.
 - It does not need a GitHub token.
 - It does not make automatic migrations.
+- CI failure is opt-in via `--fail-on-severity`.
 
 ## Roadmap
 

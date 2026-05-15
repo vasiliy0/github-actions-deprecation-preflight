@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "github-actions-deprecation-preflight"
+version = "0.1.1"
+description = "Local read-only scanner for GitHub Actions deprecation and runtime migration risks."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "GitHub Actions Deprecation Preflight contributors" }]
+keywords = ["github-actions", "ci", "deprecation", "devops", "testing"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Quality Assurance"
+]
+
+[project.urls]
+Homepage = "https://github.com/vasiliy0/github-actions-deprecation-preflight"
+Repository = "https://github.com/vasiliy0/github-actions-deprecation-preflight"
+Issues = "https://github.com/vasiliy0/github-actions-deprecation-preflight/issues"
+
+[project.scripts]
+github-actions-deprecation-preflight = "github_actions_deprecation_preflight.cli:main"
+gha-deprecation-preflight = "github_actions_deprecation_preflight.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+github_actions_deprecation_preflight = ["rules.json"]

@@ -56,10 +56,29 @@ class TestScanner(unittest.TestCase):
         self.assertNotIn("local-action-node16", ids)
         self.assertEqual(ignored_report["summary_by_severity"].get("high"), None)
 
+    def test_min_severity_filters_report_output(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "report.json"
+            exit_code = scanner.main([str(ROOT / "examples"), "--format", "json", "--output", str(output), "--min-severity", "high"])
+            self.assertEqual(exit_code, 0)
+            report = json.loads(output.read_text())
+            self.assertEqual(report["summary_by_severity"], {"high": 3})
+            self.assertNotIn("checkout-v3", report["summary_by_rule"])
+            self.assertIn("Filtered findings below high severity.", report["notes"])
+
     def test_unknown_rule_is_cli_error(self):
         with mock.patch("sys.stderr"):
             with self.assertRaises(SystemExit):
                 scanner.main([str(ROOT / "examples"), "--only-rule", "missing-rule"])
+
+    def test_list_rules_outputs_active_inventory(self):
+        rules = scanner.filter_rules(scanner.load_rules(), only_rule={"upload-artifact-v3"})
+        text = scanner.render_rule_inventory(rules)
+        self.assertIn("upload-artifact-v3", text)
+        self.assertIn("Severity", text)
+
+        data = json.loads(scanner.render_rule_inventory(rules, "json"))
+        self.assertEqual(data["rules"][0]["id"], "upload-artifact-v3")
 
 if __name__ == "__main__":
     unittest.main()

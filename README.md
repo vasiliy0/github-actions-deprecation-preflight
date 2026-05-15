@@ -18,7 +18,10 @@ python3 scanner.py examples
 python3 scanner.py examples --format json
 python3 scanner.py examples --output report.md
 python3 scanner.py examples --fail-on-severity high
+python3 scanner.py examples --min-severity high
 python3 scanner.py examples --only-rule upload-artifact-v3
+python3 scanner.py --list-rules
+python3 scanner.py --list-rules --format json
 python3 scanner.py examples --ignore-rule local-action-node20-review
 ```
 
@@ -32,11 +35,15 @@ Active rules: 7
 Findings: 6
 ```
 
+## CI usage
+
+See [`docs/CI_USAGE.md`](docs/CI_USAGE.md) for report-only, high-risk gate, and scoped rollout examples.
+
 ## Intended workflow
 
 1. Run the scanner at a repository root.
 2. Review high-severity findings first, especially retired artifact actions and old local JavaScript runtimes.
-3. Use `--only-rule` while validating one migration family, or `--ignore-rule` for a documented false-positive/noise window.
+3. Use `--min-severity high` for a high-risk-only report, `--only-rule` while validating one migration family, or `--ignore-rule` for a documented false-positive/noise window.
 4. Upgrade action majors on a branch.
 5. Verify workflow behavior before merging.
 
@@ -48,10 +55,11 @@ Findings: 6
 - It does not make automatic migrations.
 - CI failure is opt-in via `--fail-on-severity`.
 - Rule filtering is explicit and local; unknown rule ids fail fast instead of silently changing coverage.
+- `--list-rules` can be used to review active rule coverage before adding the scanner to CI.
 
 ## Roadmap
 
 - Expand the rule inventory as GitHub Actions deprecations change.
 - Add more fixtures for common workflow patterns.
-- Add machine-readable rule inventory docs for CI adoption.
+- Expand CI adoption examples and release notes.
 - Keep the default mode deterministic, local, and read-only.

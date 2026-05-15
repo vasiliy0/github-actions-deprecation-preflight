@@ -1,0 +1,53 @@
+{
+  "rules": [
+    {
+      "id": "upload-artifact-v3",
+      "severity": "high",
+      "pattern": "actions/upload-artifact@v3",
+      "why": "upload-artifact v3 is retired/deprecated; workflows should move to the current major.",
+      "fix": "Upgrade to actions/upload-artifact@v4 and review changed artifact behavior, overwrite/merge assumptions, and retention settings."
+    },
+    {
+      "id": "download-artifact-v3",
+      "severity": "high",
+      "pattern": "actions/download-artifact@v3",
+      "why": "download-artifact v3 is retired/deprecated; workflows should move to the current major.",
+      "fix": "Upgrade to actions/download-artifact@v4 and verify artifact naming/path assumptions."
+    },
+    {
+      "id": "cache-v3",
+      "severity": "medium",
+      "pattern": "actions/cache@v3",
+      "why": "Older cache major versions are recurring deprecation/migration hotspots.",
+      "fix": "Upgrade to actions/cache@v4 and verify cache key/restore behavior in a non-release branch."
+    },
+    {
+      "id": "checkout-v3",
+      "severity": "medium",
+      "pattern": "actions/checkout@v3",
+      "why": "Older checkout major versions can lag runtime/security maintenance.",
+      "fix": "Upgrade to actions/checkout@v4 and verify submodule/LFS/token behavior if used."
+    },
+    {
+      "id": "setup-node-v3",
+      "severity": "medium",
+      "pattern": "actions/setup-node@v3",
+      "why": "Older setup-node major versions can lag runtime/security maintenance.",
+      "fix": "Upgrade to actions/setup-node@v4 and verify node-version/cache behavior."
+    },
+    {
+      "id": "local-action-node16",
+      "severity": "high",
+      "pattern": "using:\\s*[\\\"']?node16[\\\"']?",
+      "why": "Local JavaScript actions running on Node 16 are a runtime deprecation risk.",
+      "fix": "Move the local action runtime to node20/node24 as supported, rebuild dependencies, and test on a branch."
+    },
+    {
+      "id": "local-action-node20-review",
+      "severity": "low",
+      "pattern": "using:\\s*[\\\"']?node20[\\\"']?",
+      "why": "Node 20 local actions may need planned review before a future Node 24 migration.",
+      "fix": "Track upstream GitHub Actions runtime schedules and keep the action dependency tree current."
+    }
+  ]
+}

@@ -11,7 +11,25 @@ Local read-only prototype that scans GitHub Actions workflow files, local JavaSc
 
 No GitHub API, tokens, accounts, or network calls are used.
 
-## Try locally
+## Install from PyPI
+
+```bash
+python3 -m pip install github-actions-deprecation-preflight
+github-actions-deprecation-preflight path/to/repo --format markdown
+github-actions-deprecation-preflight path/to/repo --format json
+github-actions-deprecation-preflight path/to/repo --fail-on-severity high
+github-actions-deprecation-preflight --list-rules
+```
+
+Short alias:
+
+```bash
+gha-deprecation-preflight path/to/repo --min-severity high
+```
+
+PyPI: https://pypi.org/project/github-actions-deprecation-preflight/
+
+## Try from a clone
 
 ```bash
 python3 scanner.py examples

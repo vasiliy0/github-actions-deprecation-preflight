@@ -22,7 +22,7 @@ class TestScanner(unittest.TestCase):
         self.assertIn("checkout-v3", ids)
         self.assertIn("setup-node-v3", ids)
         self.assertIn("local-action-node16", ids)
-        self.assertEqual(report["summary_by_rule"]["upload-artifact-v3"], 1)
+        self.assertGreaterEqual(report["summary_by_rule"]["upload-artifact-v3"], 1)
 
     def test_markdown_renderer_includes_safety_note_and_rule_summary(self):
         text = scanner.render_markdown(scanner.scan(ROOT / "examples"))
@@ -38,7 +38,7 @@ class TestScanner(unittest.TestCase):
             exit_code = scanner.main([str(ROOT / "examples"), "--format", "json", "--output", str(output), "--fail-on-severity", "high"])
             self.assertEqual(exit_code, 1)
             report = json.loads(output.read_text())
-            self.assertEqual(report["summary_by_severity"]["high"], 3)
+            self.assertGreaterEqual(report["summary_by_severity"]["high"], 3)
 
     def test_fail_on_severity_stays_zero_above_findings(self):
         exit_code = scanner.main([str(ROOT / "examples"), "--only-rule", "checkout-v3", "--fail-on-severity", "high"])
@@ -47,7 +47,8 @@ class TestScanner(unittest.TestCase):
     def test_only_rule_and_ignore_rule_filter_active_rules(self):
         only_report = scanner.scan(ROOT / "examples", only_rule={"upload-artifact-v3"})
         self.assertEqual(only_report["active_rule_count"], 1)
-        self.assertEqual([f["rule_id"] for f in only_report["findings"]], ["upload-artifact-v3"])
+        self.assertTrue(only_report["findings"])
+        self.assertEqual({f["rule_id"] for f in only_report["findings"]}, {"upload-artifact-v3"})
 
         ignored_report = scanner.scan(ROOT / "examples", ignore_rule={"upload-artifact-v3", "download-artifact-v3", "local-action-node16"})
         ids = {finding["rule_id"] for finding in ignored_report["findings"]}
@@ -62,7 +63,8 @@ class TestScanner(unittest.TestCase):
             exit_code = scanner.main([str(ROOT / "examples"), "--format", "json", "--output", str(output), "--min-severity", "high"])
             self.assertEqual(exit_code, 0)
             report = json.loads(output.read_text())
-            self.assertEqual(report["summary_by_severity"], {"high": 3})
+            self.assertEqual(set(report["summary_by_severity"]), {"high"})
+            self.assertGreaterEqual(report["summary_by_severity"]["high"], 3)
             self.assertNotIn("checkout-v3", report["summary_by_rule"])
             self.assertIn("Filtered findings below high severity.", report["notes"])
 

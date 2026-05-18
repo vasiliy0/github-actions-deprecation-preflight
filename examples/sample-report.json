@@ -1,0 +1,131 @@
+{
+  "scanned_files": 4,
+  "active_rule_count": 7,
+  "finding_count": 12,
+  "findings": [
+    {
+      "file": ".github/actions/local-action/action.yml",
+      "line": 3,
+      "rule_id": "local-action-node16",
+      "severity": "high",
+      "signal": "using: node16",
+      "why": "Local JavaScript actions running on Node 16 are a runtime deprecation risk.",
+      "fix": "Move the local action runtime to node20/node24 as supported, rebuild dependencies, and test on a branch."
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "line": 7,
+      "rule_id": "checkout-v3",
+      "severity": "medium",
+      "signal": "- uses: actions/checkout@v3",
+      "why": "Older checkout major versions can lag runtime/security maintenance.",
+      "fix": "Upgrade to actions/checkout@v4 and verify submodule/LFS/token behavior if used."
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "line": 8,
+      "rule_id": "cache-v3",
+      "severity": "medium",
+      "signal": "- uses: actions/cache@v3",
+      "why": "Older cache major versions are recurring deprecation/migration hotspots.",
+      "fix": "Upgrade to actions/cache@v4 and verify cache key/restore behavior in a non-release branch."
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "line": 12,
+      "rule_id": "upload-artifact-v3",
+      "severity": "high",
+      "signal": "- uses: actions/upload-artifact@v3",
+      "why": "upload-artifact v3 is retired/deprecated; workflows should move to the current major.",
+      "fix": "Upgrade to actions/upload-artifact@v4 and review changed artifact behavior, overwrite/merge assumptions, and retention settings."
+    },
+    {
+      "file": "docs/snippet.md",
+      "line": 2,
+      "rule_id": "download-artifact-v3",
+      "severity": "high",
+      "signal": "- uses: actions/download-artifact@v3",
+      "why": "download-artifact v3 is retired/deprecated; workflows should move to the current major.",
+      "fix": "Upgrade to actions/download-artifact@v4 and verify artifact naming/path assumptions."
+    },
+    {
+      "file": "docs/snippet.md",
+      "line": 3,
+      "rule_id": "setup-node-v3",
+      "severity": "medium",
+      "signal": "- uses: actions/setup-node@v3",
+      "why": "Older setup-node major versions can lag runtime/security maintenance.",
+      "fix": "Upgrade to actions/setup-node@v4 and verify node-version/cache behavior."
+    },
+    {
+      "file": "sample-report.md",
+      "line": 21,
+      "rule_id": "local-action-node16",
+      "severity": "high",
+      "signal": "- Signal: `using: node16`",
+      "why": "Local JavaScript actions running on Node 16 are a runtime deprecation risk.",
+      "fix": "Move the local action runtime to node20/node24 as supported, rebuild dependencies, and test on a branch."
+    },
+    {
+      "file": "sample-report.md",
+      "line": 25,
+      "rule_id": "checkout-v3",
+      "severity": "medium",
+      "signal": "- Signal: `- uses: actions/checkout@v3`",
+      "why": "Older checkout major versions can lag runtime/security maintenance.",
+      "fix": "Upgrade to actions/checkout@v4 and verify submodule/LFS/token behavior if used."
+    },
+    {
+      "file": "sample-report.md",
+      "line": 29,
+      "rule_id": "cache-v3",
+      "severity": "medium",
+      "signal": "- Signal: `- uses: actions/cache@v3`",
+      "why": "Older cache major versions are recurring deprecation/migration hotspots.",
+      "fix": "Upgrade to actions/cache@v4 and verify cache key/restore behavior in a non-release branch."
+    },
+    {
+      "file": "sample-report.md",
+      "line": 33,
+      "rule_id": "upload-artifact-v3",
+      "severity": "high",
+      "signal": "- Signal: `- uses: actions/upload-artifact@v3`",
+      "why": "upload-artifact v3 is retired/deprecated; workflows should move to the current major.",
+      "fix": "Upgrade to actions/upload-artifact@v4 and review changed artifact behavior, overwrite/merge assumptions, and retention settings."
+    },
+    {
+      "file": "sample-report.md",
+      "line": 37,
+      "rule_id": "download-artifact-v3",
+      "severity": "high",
+      "signal": "- Signal: `- uses: actions/download-artifact@v3`",
+      "why": "download-artifact v3 is retired/deprecated; workflows should move to the current major.",
+      "fix": "Upgrade to actions/download-artifact@v4 and verify artifact naming/path assumptions."
+    },
+    {
+      "file": "sample-report.md",
+      "line": 41,
+      "rule_id": "setup-node-v3",
+      "severity": "medium",
+      "signal": "- Signal: `- uses: actions/setup-node@v3`",
+      "why": "Older setup-node major versions can lag runtime/security maintenance.",
+      "fix": "Upgrade to actions/setup-node@v4 and verify node-version/cache behavior."
+    }
+  ],
+  "summary_by_severity": {
+    "high": 6,
+    "medium": 6
+  },
+  "summary_by_rule": {
+    "local-action-node16": 2,
+    "checkout-v3": 2,
+    "cache-v3": 2,
+    "upload-artifact-v3": 2,
+    "download-artifact-v3": 2,
+    "setup-node-v3": 2
+  },
+  "notes": [
+    "Read-only local scan; no GitHub API calls or uploads.",
+    "Prototype rules are conservative and should be reviewed against official action changelogs before automated migrations."
+  ]
+}

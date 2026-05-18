@@ -1,0 +1,4 @@
+name: build-check
+runs:
+  using: node16
+  main: dist/index.js

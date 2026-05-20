@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
+
+from . import __version__
 
 DEFAULT_RULES = Path(__file__).with_name("rules.json")
 SEVERITY_ORDER = {"low": 1, "medium": 2, "high": 3}
@@ -29,21 +32,25 @@ class Finding:
     signal: str
     why: str
     fix: str
+    fingerprint: str
 
 def load_rules(path: Path = DEFAULT_RULES) -> list[Rule]:
     data = json.loads(path.read_text(encoding="utf-8"))
     return [Rule(**item) for item in data["rules"]]
 
+def is_generated_report(path: Path) -> bool:
+    return path.name in {"sample-report.md", "sample-report.json", "sample-annotations.txt", "report.md", "report.json", "annotations.txt"}
+
 def discover(root: Path) -> list[Path]:
     candidates: list[Path] = []
     workflow_dir = root / ".github" / "workflows"
     if workflow_dir.exists():
-        candidates.extend(p for p in workflow_dir.rglob("*") if p.is_file() and p.suffix.lower() in {".yml", ".yaml"})
+        candidates.extend(p for p in workflow_dir.rglob("*") if p.is_file() and p.suffix.lower() in {".yml", ".yaml"} and not is_generated_report(p))
     actions_dir = root / ".github" / "actions"
     if actions_dir.exists():
-        candidates.extend(p for p in actions_dir.rglob("action.*ml") if p.is_file())
-    candidates.extend(p for p in root.rglob("*.md") if p.is_file())
-    candidates.extend(p for p in root.rglob("*.mdx") if p.is_file())
+        candidates.extend(p for p in actions_dir.rglob("action.*ml") if p.is_file() and not is_generated_report(p))
+    candidates.extend(p for p in root.rglob("*.md") if p.is_file() and not is_generated_report(p))
+    candidates.extend(p for p in root.rglob("*.mdx") if p.is_file() and not is_generated_report(p))
     return sorted(set(candidates))
 
 def filter_rules(rules: Iterable[Rule], only_rule: set[str] | None = None, ignore_rule: set[str] | None = None) -> list[Rule]:
@@ -70,8 +77,15 @@ def scan_file(path: Path, root: Path, rules: Iterable[Rule]) -> list[Finding]:
     for idx, line in enumerate(text.splitlines(), start=1):
         for rule in rules:
             if re.search(rule.pattern, line, flags=re.I):
-                findings.append(Finding(str(path.relative_to(root)), idx, rule.id, rule.severity, line.strip(), rule.why, rule.fix))
+                rel_path = str(path.relative_to(root))
+                signal = line.strip()
+                fingerprint = make_fingerprint(rule.id, rel_path, idx, signal)
+                findings.append(Finding(rel_path, idx, rule.id, rule.severity, signal, rule.why, rule.fix, fingerprint))
     return findings
+
+def make_fingerprint(rule_id: str, file: str, line: int, signal: str) -> str:
+    data = "|".join([rule_id, file, str(line), signal.strip()[:240]])
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()[:16]
 
 def scan(root: Path, rules_path: Path = DEFAULT_RULES, only_rule: set[str] | None = None, ignore_rule: set[str] | None = None) -> dict:
     rules = filter_rules(load_rules(rules_path), only_rule=only_rule, ignore_rule=ignore_rule)
@@ -80,12 +94,27 @@ def scan(root: Path, rules_path: Path = DEFAULT_RULES, only_rule: set[str] | Non
     for file in files:
         findings.extend(scan_file(file, root, rules))
     return {
+        "schema_version": "1.0",
+        "tool": "github-actions-deprecation-preflight",
+        "tool_version": __version__,
+        "version": __version__,
+        "status": "warning" if findings else "ok",
         "scanned_files": len(files),
         "active_rule_count": len(rules),
         "finding_count": len(findings),
         "findings": [asdict(f) for f in findings],
         "summary_by_severity": severity_summary(findings),
         "summary_by_rule": rule_summary(findings),
+        "summary": {
+            "scanned_files": len(files),
+            "active_rule_count": len(rules),
+            "finding_count": len(findings),
+            "summary_by_severity": severity_summary(findings),
+            "summary_by_rule": rule_summary(findings),
+        },
+        "metadata": {
+            "privacy": "local-only; no GitHub API, token, network call, source upload, or telemetry",
+        },
         "notes": [
             "Read-only local scan; no GitHub API calls or uploads.",
             "Prototype rules are conservative and should be reviewed against official action changelogs before automated migrations.",
@@ -152,6 +181,18 @@ def render_markdown(report: dict) -> str:
         lines.append(f"- {note}")
     return "\n".join(lines) + "\n"
 
+def render_annotations(report: dict) -> str:
+    level = {"high": "error", "medium": "warning", "low": "notice"}
+    lines: list[str] = []
+    for item in report["findings"]:
+        file = item["file"]
+        line = max(int(item["line"]), 1)
+        title = f"{item['rule_id']} ({item['severity']})"
+        message = f"{item['why']} Fix: {item['fix']} Fingerprint: {item.get('fingerprint', '')}"
+        message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        lines.append(f"::{level.get(item['severity'], 'notice')} file={file},line={line},title={title}::{message}")
+    return "\n".join(lines) + ("\n" if lines else "")
+
 def render_rule_inventory(rules: list[Rule], output_format: str = "markdown") -> str:
     if output_format == "json":
         return json.dumps({"rules": [asdict(rule) for rule in rules]}, indent=2) + "\n"
@@ -169,7 +210,7 @@ def render_rule_inventory(rules: list[Rule], output_format: str = "markdown") ->
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Scan GitHub Actions files for deprecation risks.")
     parser.add_argument("path", nargs="?", default=".", help="Repository root to scan")
-    parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    parser.add_argument("--format", choices=["markdown", "json", "annotations"], default="markdown")
     parser.add_argument("--output", "-o", help="Write report to a file instead of stdout")
     parser.add_argument("--fail-on-severity", choices=["low", "medium", "high"], help="Exit 1 when findings at or above this severity are detected")
     parser.add_argument("--min-severity", choices=["low", "medium", "high"], help="Only include findings at or above this severity in the report")
@@ -177,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ignore-rule", action="append", default=[], help="Skip this rule id; repeat for multiple rules")
     parser.add_argument("--list-rules", action="store_true", help="Print the active rule inventory and exit")
     parser.add_argument("--rules", type=Path, default=DEFAULT_RULES)
+    parser.add_argument("--quiet", action="store_true", help="Automation-friendly no-op: suppresses future non-report diagnostics; reports still write normally.")
+    parser.add_argument("--no-color", action="store_true", help="Automation-friendly no-op: output is plain text by default and never requires color.")
     args = parser.parse_args(argv)
     try:
         active_rules = filter_rules(load_rules(args.rules), only_rule=set(args.only_rule), ignore_rule=set(args.ignore_rule))
@@ -187,7 +230,12 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as exc:
         parser.error(str(exc))
     report = apply_report_filters(report, args.min_severity)
-    output = json.dumps(report, indent=2) if args.format == "json" else render_markdown(report)
+    if args.format == "json":
+        output = json.dumps(report, indent=2)
+    elif args.format == "annotations":
+        output = render_annotations(report)
+    else:
+        output = render_markdown(report)
     if args.output:
         Path(args.output).write_text(output + ("" if output.endswith("\n") else "\n"), encoding="utf-8")
     else:

@@ -70,3 +70,14 @@ To complete TestPyPI publishing, provide a TestPyPI API token via an approved se
 - TestPyPI status after attempt: package still returns 404.
 
 Needed next: provide a TestPyPI API token via approved secret mechanism/environment variable, or approve a GitHub Trusted Publishing workflow path from a supported GitHub Actions environment.
+
+## 2026-05-15 TestPyPI Trusted Publishing success
+
+- Scoped approval: GitHub push of v0.1.1 package/workflow changes and workflow_dispatch `target=testpypi` only. No production PyPI, GitHub release/tag, outreach, marketplace, or payment action.
+- GitHub commit pushed: `33f9a88` (`Prepare v0.1.1 TestPyPI publishing`).
+- Workflow: `publish.yml`, run `25922435274`, target `testpypi`.
+- Result: `publish-testpypi` succeeded; `publish-pypi` was skipped by workflow condition.
+- TestPyPI: https://test.pypi.org/project/github-actions-deprecation-preflight/0.1.1/
+- Uploaded files observed via TestPyPI JSON:
+  - `github_actions_deprecation_preflight-0.1.1-py3-none-any.whl`
+  - `github_actions_deprecation_preflight-0.1.1.tar.gz`

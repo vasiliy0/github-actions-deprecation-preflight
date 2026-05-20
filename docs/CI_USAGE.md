@@ -77,6 +77,21 @@ jobs:
           path: gha-deprecation-report.json
 ```
 
+## GitHub annotations
+
+Use annotation output when you want file/line findings directly in the GitHub Actions log or PR checks:
+
+```yaml
+- name: Annotate GitHub Actions deprecation risks
+  if: always()
+  run: |
+    gha-deprecation-preflight . \
+      --format annotations \
+      --min-severity medium
+```
+
+Annotation output is plain GitHub workflow commands. Use report-only mode first; add `--fail-on-severity high` only after expected high-severity findings are fixed or documented.
+
 ## Scoped rollout examples
 
 Run one migration family first:

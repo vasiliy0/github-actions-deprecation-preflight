@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/vasiliy0/github-actions-deprecation-preflight/schemas/report.schema.json",
+  "title": "GitHub Actions Deprecation Preflight Report",
+  "type": "object",
+  "required": ["schema_version", "tool", "tool_version", "status", "scanned_files", "active_rule_count", "finding_count", "summary", "findings", "notes"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "tool": {"const": "github-actions-deprecation-preflight"},
+    "tool_version": {"type": "string"},
+    "version": {"type": "string"},
+    "status": {"enum": ["ok", "warning", "fail", "error"]},
+    "scanned_files": {"type": "integer", "minimum": 0},
+    "active_rule_count": {"type": "integer", "minimum": 0},
+    "finding_count": {"type": "integer", "minimum": 0},
+    "summary": {"type": "object"},
+    "summary_by_severity": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "summary_by_rule": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "line", "rule_id", "severity", "signal", "why", "fix", "fingerprint"],
+        "properties": {
+          "file": {"type": "string"},
+          "line": {"type": "integer", "minimum": 1},
+          "rule_id": {"type": "string"},
+          "severity": {"enum": ["low", "medium", "high"]},
+          "signal": {"type": "string"},
+          "why": {"type": "string"},
+          "fix": {"type": "string"},
+          "fingerprint": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "metadata": {"type": "object"},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

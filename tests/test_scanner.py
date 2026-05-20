@@ -82,5 +82,21 @@ class TestScanner(unittest.TestCase):
         data = json.loads(scanner.render_rule_inventory(rules, "json"))
         self.assertEqual(data["rules"][0]["id"], "upload-artifact-v3")
 
+
+    def test_json_report_has_agent_contract_fields(self):
+        report = scanner.scan(ROOT / "examples")
+        self.assertEqual(report["schema_version"], "1.0")
+        self.assertEqual(report["tool"], "github-actions-deprecation-preflight")
+        self.assertIn("tool_version", report)
+        self.assertIn(report["status"], {"ok", "warning"})
+        self.assertIn("summary", report)
+        self.assertIn("metadata", report)
+        self.assertIn("fingerprint", report["findings"][0])
+
+    def test_annotations_output(self):
+        text = scanner.render_annotations(scanner.apply_report_filters(scanner.scan(ROOT / "examples"), "high"))
+        self.assertIn("::error", text)
+        self.assertIn("upload-artifact-v3", text)
+
 if __name__ == "__main__":
     unittest.main()

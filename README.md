@@ -147,6 +147,20 @@ Findings: 13
 - [Zod OpenAPI Contract Lint Kit](https://github.com/vasiliy0/zod-openapi-contract-lint-kit) — API contract drift checks for Zod/OpenAPI projects.
 - [Playwright Flake Triage Toolkit](https://github.com/vasiliy0/playwright-flake-triage) — local triage for flaky Playwright reports and CI logs.
 
+## For AI agents and automation
+
+Use JSON mode as the stable machine interface:
+
+```bash
+gha-deprecation-preflight . --format json --output gha-deprecation-report.json --quiet --no-color
+```
+
+Machine contract: `schemas/report.schema.json` (`schema_version: 1.0`). Findings include rule id, severity, file/line, matched signal, fix guidance, and stable fingerprints for reruns. GitHub annotation output is available with `--format annotations`.
+
+Exit codes: `0` completed/report-only, `1` configured severity gate matched, `2` usage/config/rule-id error, `3` reserved for runtime/tool errors.
+
+Agent workflow docs: [`docs/AGENT_INTEGRATION.md`](docs/AGENT_INTEGRATION.md).
+
 ## Roadmap
 
 - Expand the rule inventory as GitHub Actions deprecations change.
